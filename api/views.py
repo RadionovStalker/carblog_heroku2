@@ -209,6 +209,6 @@ class ApiRoot(generics.GenericAPIView):
 
     def get(self, request):
         return Response({
-            'articles': reverse(ArtilceListAPI.name, request=request),
+            'articles': reverse(ArticleListAPI.name, request=request),
             'authors': reverse(UserProfileListAPI.name, request=request)
         })
