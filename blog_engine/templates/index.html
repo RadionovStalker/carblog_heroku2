@@ -24,9 +24,9 @@
                     {% if group_choice %}
                     {% for cat in group_choice %}
                         {% if cat in group_by %}
-                        <option selected="selected">{{cat}}</option>
+                        <option selected="selected" value={{cat.name}}>6</option>
                         {% else %}
-                        <option>{{cat}}</option>
+                        <option value={{cat.name}}>{{cat.name}}</option>
                         {% endif %}
                     {% endfor %}
                     {% endif %}

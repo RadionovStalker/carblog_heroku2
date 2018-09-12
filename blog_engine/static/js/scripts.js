@@ -52,14 +52,14 @@ $("#subscribe_control").click(function (){
     });
 });
 
-$("#like_control").click(function (){
-    console.log("like clicked in js!");
-   $.ajax({
+function like_article(art_id, url_view){
+  console.log("like clicked in js!");
+  $.ajax({
        type: "GET",
-       url: "",
+       url: url_view,
         data: {
            'type': $( "input[name$='type']" ).val(),
-           'art_id': $(this).val()
+           'art_id': art_id
         },
         dataType: "json",
         cache: false,
@@ -74,7 +74,31 @@ $("#like_control").click(function (){
             $("#rating").text("Рейтинг: ".concat(data['count_like']));
         }
     });
-});
+}
+
+//$("#like_control").click(function (){
+//    console.log("like clicked in js!");
+//   $.ajax({
+//       type: "GET",
+//       url: "",
+//        data: {
+//           'type': $( "input[name$='type']" ).val(),
+//           'art_id': $(this).val()
+//        },
+//        dataType: "json",
+//        cache: false,
+//        success: function(data) {
+//           console.log(data);
+//           if(data['liked']==1){
+//              $("#like_control").text("Like");
+//           }
+//           else if(data['liked']==2){
+//              $("#like_control").text("Unlike");
+//           }
+//            $("#rating").text("Рейтинг: ".concat(data['count_like']));
+//        }
+//    });
+//});
 
 $(".btn_ans").click(function() {
     console.log("Была нажата кнопка комментария № ".concat($(this).val()));

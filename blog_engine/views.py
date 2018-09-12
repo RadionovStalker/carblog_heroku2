@@ -23,7 +23,7 @@ from .tasks import send_mail_with_celery
 class IndexView(generic.ListView):
     model = Article
     template_name = 'index.html'
-    paginate_by = 3
+    paginate_by = 5
 
     # def post(self, request, *args, **kwargs):
     #     print('post before')
@@ -51,7 +51,7 @@ class IndexView(generic.ListView):
         cat_names = list()
         for cat in TreeCategory.objects.all():
             cat_names.append(cat.name)
-        context['group_choice'] = cat_names
+        context['group_choice'] = TreeCategory.objects.all()
         # print(context['group_choice'])
         if 'group_by' in self.request.GET:
             context['group_by'] = self.request.GET.getlist('group_by')
@@ -171,24 +171,6 @@ class ArticleDetailView(generic.DetailView):
             context['com_count'] = 0
 
         return context
-
-    # def get(self, request, *args, **kwargs):
-    #     article = get_object_or_404(Article, pk=self.kwargs['pk'])
-    #     print("get like")
-    #     print(request.GET)
-    #     data = dict()
-    #     if 'type' in request.GET:
-    #         if request.GET['type'] == 'like':
-    #             if self.request.user in article.like.all():
-    #                 article.like.remove(self.request.user)
-    #                 data['liked'] = 1
-    #             else:
-    #                 data['liked'] = 2
-    #                 article.like.add(self.request.user)
-    #             data['count_like'] = article.like.count()
-    #             return JsonResponse(data)
-    #             # return super(ArticleDetailView, self).get(request, *args, **kwargs)
-    #     return super(ArticleDetailView, self).get(request, *args, **kwargs)
 
 
 class AuthorDetailView(generic.DetailView):

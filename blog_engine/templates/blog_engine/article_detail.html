@@ -1,11 +1,9 @@
 {% extends "base_generic.html" %}
 {% load static %}
  {% load i18n %}
-{% load cache %}
 {% get_current_language as LANGUAGE_CODE %}
 {% load thumbnail %}
 {% block content %}
- {% cache 600 article_detail LANGUAGE_CODE request.user article.id %}
     <h1>{% trans "Title"%}: {{ article.title }}</h1>
 {% if article.image %}
     <p>{% trans "Main image" %}: </p>
@@ -36,9 +34,8 @@
     <p id="rating">{% trans 'Rating'%}: {{like_count}}</p>
     {% if request.user.is_authenticated %}
          <input type="hidden" name="type" value="like">
-        <button id="like_control" type="button" onclick="">{{liked}}</button>
+        <button id="like_control" type="button" onclick="like_article({{article.id}}, '{% url 'article-like' %}')">{{liked}}</button>
     {%endif%}
-{% endcache %}
     <p>{% trans 'All comments'%}: {{com_count}}.</p>
     {% if request.user.is_authenticated %}
     <form method="post" action="{% url 'article-add-comment' article.id %}">

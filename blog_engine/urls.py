@@ -15,5 +15,5 @@ urlpatterns = [
     url(r'article_delete/(?P<pk>\d+)$', views.UserDeleteArticleView.as_view(), name='article-delete'),
     url(r'profile_update/(?P<pk>\d+)$', views.UserProfileUpdateView.as_view(), name='profile-update'),
     url(r'article_add_comment/(?P<pk>\d+)$', views.ArticleHandleCommentsView.as_view(), name='article-add-comment'),
-    url(r'article_like/(?P<pk>\d+)$', views.ArticleHandleLikesView.as_view(), name='article-like')
+    url(r'article_like/$', views.ArticleHandleLikesView.as_view(), name='article-like')
 ]
