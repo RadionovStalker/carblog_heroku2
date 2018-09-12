@@ -8,8 +8,7 @@
 <h1 class="main_title">Main Car Blog</h1>
 <div class="filters">
     <div class="row">
-        <form action="" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+        <form action="" method="get" enctype="multipart/form-data">
             <div class="col-sm-6">
                 <label for="sel_ord">{%trans "Show at first" %}</label>
                 <select id="sel_ord" name="order_by">

@@ -59,6 +59,7 @@ $("#like_control").click(function (){
        url: "",
         data: {
            'type': $( "input[name$='type']" ).val(),
+           'art_id': $(this).val()
         },
         dataType: "json",
         cache: false,
@@ -84,15 +85,14 @@ $(".btn_ans").click(function() {
     console.log(com_text);
     console.log(com_author);
 });
-
-function answer(com_id, answer_to, elem){
-
+function answer(com_id, answer_to, elem, url_view){
+    console.log("answer function")
     if($(elem).val() == 1){
         $(elem).val(2);
         $(elem).text("Отменить");
         $("#answer"+com_id.toString()).empty();
         $("#answer"+com_id.toString()).append(
-        '<form method="post">'+
+        '<form method="post" action="'+url_view+'">'+
             '<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
             '<p>Ответить :'+answer_to+'</p>'+
             '<textarea name="ans_text" placeholder="Введите Ваш ответ тут..."></textarea>'+
@@ -107,14 +107,36 @@ function answer(com_id, answer_to, elem){
         $("#answer"+com_id.toString()).empty();
     }
 }
+//function answer(com_id, answer_to, elem){
+//    console.log("answer function")
+//    if($(elem).val() == 1){
+//        $(elem).val(2);
+//        $(elem).text("Отменить");
+//        $("#answer"+com_id.toString()).empty();
+//        $("#answer"+com_id.toString()).append(
+//        '<form method="post">'+
+//            '<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
+//            '<p>Ответить :'+answer_to+'</p>'+
+//            '<textarea name="ans_text" placeholder="Введите Ваш ответ тут..."></textarea>'+
+//            '<input type="hidden" name="coment_id" value='+com_id+' />'+
+//            '<button type="submit" name="answer" >Подтвердить</button>'+
+//        '</form>'
+//        );
+//    }
+//    else{
+//        $(elem).val(1);
+//        $(elem).text("Ответить");
+//        $("#answer"+com_id.toString()).empty();
+//    }
+//}
 
-function update_comment(com_id, text, elem){
+function update_comment(com_id, text, elem, url_view){
     if($(elem).val() == 1){
         $(elem).val(2);
         $(elem).text("Отменить");
         $("#answer"+com_id.toString()).empty();
         $("#answer"+com_id.toString()).append(
-        '<form method="post">'+
+        '<form method="post" action="'+url_view+'">'+
             '<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
             '<textarea name="upd_com_text">'+text+'</textarea>'+
             '<input type="hidden" name="coment_id" value='+com_id+' />'+
@@ -129,13 +151,13 @@ function update_comment(com_id, text, elem){
     }
 }
 
-function delete_comment(com_id, elem){
+function delete_comment(com_id, elem, url_view){
     if($(elem).val() == 1){
         $(elem).val(2);
         $(elem).text("Отменить");
         $("#answer"+com_id.toString()).empty();
         $("#answer"+com_id.toString()).append(
-        '<form method="post">'+
+        '<form method="post" action="'+url_view+'">'+
             '<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
             '<p>Вы уверены, что хотите удалить данный комментарий?</p>'+
             '<p>Для подтверждения удаления, нажмите "Подтвердить"</p>'+

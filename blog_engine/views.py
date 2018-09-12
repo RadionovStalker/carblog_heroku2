@@ -25,32 +25,38 @@ class IndexView(generic.ListView):
     template_name = 'index.html'
     paginate_by = 3
 
-    def post(self, request, *args, **kwargs):
-        print('post before')
-        print(self.request.POST)
-        if 'unfilter_btn' in self.request.POST:
-            print("delete filters")
-            self.request.session['order_by'] = '-date_creation'
-            self.request.session['group_by'] = 'no'
-        else:
-            self.request.session['order_by'] = self.request.POST.get('order_by', '-date_creation')
-            self.request.session['group_by'] = self.request.POST.getlist('group_by', 'no')
-        print('post after')
-        print(self.request.POST)
-        # print(self.request.session['group_by'])
-        return super().get(request, *args, **kwargs)
+    # def post(self, request, *args, **kwargs):
+    #     print('post before')
+    #     print(self.request.POST)
+    #     print('get')
+    #     print(self.request.GET)
+    #     if 'unfilter_btn' in self.request.POST:
+    #         print("delete filters")
+    #         self.request.session['order_by'] = '-date_creation'
+    #         self.request.session['group_by'] = 'no'
+    #     else:
+    #         self.request.session['order_by'] = self.request.POST.get('order_by', '-date_creation')
+    #         self.request.session['group_by'] = self.request.POST.getlist('group_by', 'no')
+    #     print('post after')
+    #     print(self.request.POST)
+    #     # print(self.request.session['group_by'])
+    #     return super().get(request, *args, **kwargs)
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['order_by'] = self.request.session.get('order_by', '-date_creation')
+        # context['order_by'] = self.request.session.get('order_by', '-date_creation')
+        context['order_by'] = self.request.GET.get('order_by', '-date_creation')
         context['order_choice'] = CHOICE_LIST
         print("context")
         cat_names = list()
         for cat in TreeCategory.objects.all():
             cat_names.append(cat.name)
         context['group_choice'] = cat_names
-        print(context['group_choice'])
-        context['group_by'] = self.request.session.get('group_by', 'no')
+        # print(context['group_choice'])
+        if 'group_by' in self.request.GET:
+            context['group_by'] = self.request.GET.getlist('group_by')
+        else:
+            context['group_by'] = 'no'
         print(context['group_by'])
         # print('context')
         # print(context)
@@ -58,8 +64,14 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         print("queryset")
-        print(self.request.session)
-        grouping = self.request.session.get('group_by', 'no')
+        # print(self.request.session)
+        print("get queryset")
+        print(self.request.GET)
+        if 'group_by' in self.request.GET:
+            grouping = self.request.GET.getlist('group_by')
+        else:
+            grouping = 'no'
+        # grouping = self.request.GET.get('group_by', 'no')
         print("it is grouping:")
         print(grouping)
         if grouping != 'no':
@@ -75,7 +87,7 @@ class IndexView(generic.ListView):
         else:
             objects = Article.objects.filter(translations__language_code=get_language())
 
-        ordering = self.request.session.get('order_by', '-date_creation')
+        ordering = self.request.GET.get('order_by', '-date_creation')
         if ordering == 'like':
             return objects.annotate(q_count=Count('like')).order_by('q_count', '-date_creation')
         elif ordering == '-like':
@@ -84,56 +96,20 @@ class IndexView(generic.ListView):
             return objects.order_by(ordering)
 
 
-class ArticleDetailView(generic.DetailView):
-    model = Article
-
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        article = get_object_or_404(Article, pk=self.kwargs['pk'])
-        context['gallery'] = Gallery.objects.filter(article=article)
-        context['like_count'] = article.like.count()
-        if self.request.user in article.like.all():
-            context['liked'] = "Unlike"
-        else:
-            context['liked'] = "Like"
-        comments = Comment.objects.filter(article=article)
-        if comments:
-            context['comments'] = comments
-            context['com_count'] = len(comments)
-        else:
-            context['comments'] = 'none'
-            context['com_count'] = 0
-
-        return context
-
-    def get(self, request, *args, **kwargs):
-        article = get_object_or_404(Article, pk=self.kwargs['pk'])
-        print("get like")
-        print(request.GET)
-        data = dict()
-        if 'type' in request.GET:
-            if request.GET['type'] == 'like':
-                if self.request.user in article.like.all():
-                    article.like.remove(self.request.user)
-                    data['liked'] = 1
-                else:
-                    data['liked'] = 2
-                    article.like.add(self.request.user)
-                data['count_like'] = article.like.count()
-                return JsonResponse(data)
-                # return super(ArticleDetailView, self).get(request, *args, **kwargs)
-        return super(ArticleDetailView, self).get(request, *args, **kwargs)
+class ArticleHandleCommentsView(generic.View):
 
     def post(self, request, *args, **kwargs):
         article = Article.objects.get(pk=self.kwargs['pk'])
         print(request.POST)
         if 'com_text' in request.POST:
-            new_comment = Comment(article=article, text=request.POST['com_text'], author=request.user) # добавить ручную проверку на безопасность вводимого текста
+            new_comment = Comment(article=article, text=request.POST['com_text'],
+                                  author=request.user)  # добавить ручную проверку на безопасность вводимого текста
             new_comment.save()
             return redirect("article-detail", pk=self.kwargs['pk'])
         elif 'ans_text' in request.POST:
             parent_comment = Comment.objects.get(id=request.POST['coment_id'])
-            new_comment = Comment(article=article, text=request.POST['ans_text'], author=request.user, parent_comment=parent_comment)
+            new_comment = Comment(article=article, text=request.POST['ans_text'], author=request.user,
+                                  parent_comment=parent_comment)
             new_comment.save()
             parent_comment.child_comments = new_comment
             parent_comment.save()
@@ -148,6 +124,71 @@ class ArticleDetailView(generic.DetailView):
             return redirect("article-detail", pk=self.kwargs['pk'])
         else:
             return redirect("article-detail", pk=self.kwargs['pk'])
+
+
+class ArticleHandleLikesView(generic.View):
+
+    def get(self, request, *args, **kwargs):
+        # article = get_object_or_404(Article, pk=self.kwargs['pk'])
+        print("get like")
+        print(request.GET)
+        data = dict()
+        if 'type' in request.GET:
+            if request.GET['type'] == 'like':
+                article = get_object_or_404(Article, pk=request.GET['art_id'])
+                if self.request.user in article.like.all():
+                    article.like.remove(self.request.user)
+                    data['liked'] = 1
+                else:
+                    data['liked'] = 2
+                    article.like.add(self.request.user)
+                data['count_like'] = article.like.count()
+                return JsonResponse(data)
+                # return super(ArticleDetailView, self).get(request, *args, **kwargs)
+        return super(ArticleHandleLikesView, self).get(request, *args, **kwargs)
+
+
+class ArticleDetailView(generic.DetailView):
+    model = Article
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        article = get_object_or_404(Article, pk=self.kwargs['pk'])
+        context['gallery'] = article.gallery.all()
+        # context['gallery'] = Gallery.objects.filter(article=article)
+        context['like_count'] = article.like.count()
+        if self.request.user in article.like.all():
+            context['liked'] = "Unlike"
+        else:
+            context['liked'] = "Like"
+        # comments = Comment.objects.filter(article=article)
+        comments = article.comment.all()
+        if comments:
+            context['comments'] = comments
+            context['com_count'] = len(comments)
+        else:
+            context['comments'] = 'none'
+            context['com_count'] = 0
+
+        return context
+
+    # def get(self, request, *args, **kwargs):
+    #     article = get_object_or_404(Article, pk=self.kwargs['pk'])
+    #     print("get like")
+    #     print(request.GET)
+    #     data = dict()
+    #     if 'type' in request.GET:
+    #         if request.GET['type'] == 'like':
+    #             if self.request.user in article.like.all():
+    #                 article.like.remove(self.request.user)
+    #                 data['liked'] = 1
+    #             else:
+    #                 data['liked'] = 2
+    #                 article.like.add(self.request.user)
+    #             data['count_like'] = article.like.count()
+    #             return JsonResponse(data)
+    #             # return super(ArticleDetailView, self).get(request, *args, **kwargs)
+    #     return super(ArticleDetailView, self).get(request, *args, **kwargs)
 
 
 class AuthorDetailView(generic.DetailView):

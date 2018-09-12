@@ -36,12 +36,12 @@
     <p id="rating">{% trans 'Rating'%}: {{like_count}}</p>
     {% if request.user.is_authenticated %}
          <input type="hidden" name="type" value="like">
-        <button id="like_control">{{liked}}</button>
+        <button id="like_control" type="button" onclick="">{{liked}}</button>
     {%endif%}
 {% endcache %}
     <p>{% trans 'All comments'%}: {{com_count}}.</p>
     {% if request.user.is_authenticated %}
-    <form method="post">
+    <form method="post" action="{% url 'article-add-comment' article.id %}">
         {% csrf_token %}
         <textarea name="com_text" placeholder="{trans 'Enter your comment here...'%}"></textarea>
         <input type="submit" value="{% trans 'Leave a comment'%}">
@@ -66,11 +66,11 @@
             <div id="answer{{com.id}}"></div>
             <form method="get">
             {% if request.user.is_authenticated %}
-                <button name="ans_btn" type="button" value="1" onclick="answer({{com.id}},'{{com.author.username}}', this)">{% trans 'Reply'%}</button>
+                <button name="ans_btn" type="button" value="1" onclick="answer({{com.id}},'{{com.author.username}}', this, '{% url 'article-add-comment' article.id %}')">{% trans 'Reply'%}</button>
             {% endif %}
             {% if request.user == com.author %}
-                 <button name="upd_btn" type="button" value="1" onclick="update_comment({{com.id}},'{{com.text}}', this)">{% trans 'Edit'%}</button>
-                <button name="del_btn" type="button" value="1" onclick="delete_comment({{com.id}}, this)">{% trans 'Delete'%}</button>
+                 <button name="upd_btn" type="button" value="1" onclick="update_comment({{com.id}},'{{com.text}}', this, '{% url 'article-add-comment' article.id %}')">{% trans 'Edit'%}</button>
+                <button name="del_btn" type="button" value="1" onclick="delete_comment({{com.id}}, this, '{% url 'article-add-comment' article.id %}')">{% trans 'Delete'%}</button>
             </form>
             {% endif %}
         </div>
