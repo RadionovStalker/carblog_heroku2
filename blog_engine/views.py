@@ -20,15 +20,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .tasks import send_mail_with_celery
 
 
-# def get_next_url(request):
-#     next = request.META.get('HTTP_REFERER')
-#     if next:
-#         next = urlunquote(next)  # HTTP_REFERER may be encoded.
-#     if not is_safe_url(url=next, host=request.get_host()):
-#         next = '/'
-#     return next
-
-
 class IndexView(generic.ListView):
     model = Article
     template_name = 'index.html'
@@ -229,11 +220,6 @@ class ArticleAddView(FormView):
             emails.append(subs.subscriber)
         if len(emails) > 0:
             send_mail_with_celery.delay(self.request.user.username, self.request.get_host(), new_article.pk, emails)
-            # send_mail('Carblog новая статья от {0}'.format(self.request.user.username),
-            #           'Автор {0}, на которого Вы подписаны опубликовал новую статью : \n {1}'.format(self.request.user.username,
-            #                                                                                          "{0}{1}".format(self.request.get_host(),
-            #                                                                                                           reverse_lazy('article-detail', kwargs={"pk": new_article.pk}))),
-            #           'Carblog', emails)
         for item in self.request.FILES.getlist('gallery'):
             Gallery.objects.create(image=item, article=new_article)
         self.success_url = reverse_lazy('article-detail', kwargs={"pk": new_article.pk})

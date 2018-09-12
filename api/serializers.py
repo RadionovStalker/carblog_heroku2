@@ -6,55 +6,19 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from parler_rest.serializers import TranslatableModelSerializer
 from parler_rest.fields import TranslatedFieldsField
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 
-class Base64ImageField(serializers.ImageField):
-    """
-    A Django REST framework field for handling image-uploads through raw post data.
-    It uses base64 for encoding and decoding the contents of the file.
 
-    Heavily based on
-    https://github.com/tomchristie/django-rest-framework/pull/1268
-
-    Updated for Django REST framework 3.
-    """
-
-    # def to_internal_value(self, data):
-    #     from django.core.files.base import ContentFile
-    #     import base64
-    #     import six
-    #     import uuid
-    #
-    #     # Check if this is a base64 string
-    #     if isinstance(data, six.string_types):
-    #         # Check if the base64 string is in the "data:" format
-    #         if 'data:' in data and ';base64,' in data:
-    #             # Break out the header from the base64 content
-    #             header, data = data.split(';base64,')
-    #
-    #         # Try to decode the file. Return validation error if it fails.
-    #         try:
-    #             decoded_file = base64.b64decode(data)
-    #         except TypeError:
-    #             self.fail('invalid_image')
-    #
-    #         # Generate file name:
-    #         file_name = str(uuid.uuid4())[:12] # 12 characters are more than enough.
-    #         # Get the file name extension:
-    #         file_extension = self.get_file_extension(file_name, decoded_file)
-    #
-    #         complete_file_name = "%s.%s" % (file_name, file_extension, )
-    #
-    #         data = ContentFile(decoded_file, name=complete_file_name)
-    #
-    #     return super(Base64ImageField, self).to_internal_value(data)
-    #
-    # def get_file_extension(self, file_name, decoded_file):
-    #     import imghdr
-    #
-    #     extension = imghdr.what(file_name, decoded_file)
-    #     extension = "jpg" if extension == "jpeg" else extension
-    #
-    #     return extension
+def validate_language(data):
+    if 'language' in data.keys():
+        lang = data['language']
+        for lang_code, lang_name in settings.LANGUAGES:
+            if lang_code == lang:
+                return True
+        else:
+            raise serializers.ValidationError("Unsupported code of language={}".format(lang))
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -117,6 +81,29 @@ class ArticlePostSerializer(serializers.Serializer):
     body = serializers.CharField()
     language = serializers.CharField(max_length=2, required=False)
 
+    def validate(self, data):
+        if not validate_language(data):
+            data['language'] = settings.PARLER_LANGUAGES['default']['fallbacks'][0]
+            # так добавляется поле manyTomanyField
+        try:
+            cat = TreeCategory.objects.get(id=data['tree_category'])
+            data['tree_category'] = cat
+        except ObjectDoesNotExist as error:
+            raise error
+        return data
+
+    def save(self, request):
+        art = Article()
+        art.set_current_language(self.validated_data['language'])
+        art.title = self.validated_data['title']
+        art.description = self.validated_data['description']
+        art.body = self.validated_data['body']
+        art.author = request.user
+        art.save()
+        # так добавляется поле manyTomanyField
+        art.tree_category.add(self.validated_data['tree_category'])
+        art.save()
+
 
 class ArticlePutSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -125,8 +112,41 @@ class ArticlePutSerializer(serializers.Serializer):
     body = serializers.CharField(required=False)
     language = serializers.CharField(max_length=2)
 
+    def validate(self, data):
+        if validate_language(data):
+            return data
+
+    def save(self, request):
+        art_for_upd = Article.objects.get(id=self.validated_data['id'])
+        if art_for_upd.author != request.user:
+                    raise PermissionDenied("Forbidden, only author of the article can update it")
+        art_for_upd.set_current_language(self.validated_data['language'])
+        if 'title' in self.validated_data.keys():
+            art_for_upd.title = self.validated_data['title']
+        elif not art_for_upd.title:
+            raise ValueError("Field 'title' is null, you must put parameter 'title'")
+        if 'description' in self.validated_data.keys():
+            art_for_upd.description = self.validated_data['description']
+        elif not art_for_upd.description:
+            raise ValueError("Field 'description' is null, you must put parameter 'description'")
+        if 'body' in self.validated_data.keys():
+            art_for_upd.body = self.validated_data['body']
+        elif not art_for_upd.body:
+            raise ValueError("Field 'body' is null, you must put parameter 'body'")
+        art_for_upd.save()
+
 
 class ArticleDeleteSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+
+    def save(self, request):
+        art_for_del = Article.objects.get(id=self.validated_data['id'])
+        if art_for_del.author != request.user:
+            raise PermissionDenied("Forbidden, only author of the article can delete it")
+        art_for_del.delete()
+
+
+class IntegerIdSerializer(serializers.Serializer):
     id = serializers.IntegerField()
 
 
@@ -135,12 +155,8 @@ class ArticleSerializer(TranslatableModelSerializer):
     class Meta:
         model = Article
         fields = (
-            # 'url',
             'id',
-            # 'title',
             'author',
-            # 'description',
-            # 'body',
             'translations',
             'tree_category',
             'image',
@@ -148,11 +164,7 @@ class ArticleSerializer(TranslatableModelSerializer):
             'likes'
         )
         read_only_fields = ['id', 'url', 'author', 'gallery', 'likes']
-    # image = Base64ImageField(max_length=None, use_url=True)
-    # url = serializers.HyperlinkedIdentityField(
-    #     view_name='article-detail-api',
-    #     lookup_field='pk',
-    # )
+
     likes = serializers.SerializerMethodField()
 
     def get_likes(self, obj):

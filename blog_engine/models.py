@@ -22,22 +22,6 @@ class TreeCategory(MP_Node):
         return self.name
 
 
-# class Category(models.Model):
-#     name = models.CharField(max_length=150)
-#     article = models.ManyToManyField('Article', related_name='category_article', blank=True)
-#     # parent_category = models.ForeignKey('Category',
-#     #                                     related_name='cat_parent', blank=True, null=True, on_delete=models.CASCADE)
-#     children_category = models.ManyToManyField('Category', related_name='cat_child', blank=True)
-#
-#     def __str__(self):
-#         return self.name
-#
-#     def get_absolute_url(self):
-#         return reverse('category', args=[str(self.id)])
-#
-#     class Meta:
-#         ordering = ['name']
-
 def unique_name_and_path(instance, filename):
     """
     Именование загруженного изображения в вид:
