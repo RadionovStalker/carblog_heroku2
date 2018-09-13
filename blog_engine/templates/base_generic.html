@@ -67,23 +67,6 @@
         <div class="row">
           <div class="col-sm-12 ">
           {% block content %}{% endblock %}
-          {% block pagination %}
-          {% if is_paginated %}
-              <div class="pagination">
-                  <span class="page-links">
-                      {% if page_obj.has_previous %}
-                          <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
-                      {% endif %}
-                      <span class="page-current">
-                          {% blocktrans with pg_numb=page_obj.number pg_all=page_obj.paginator.num_pages %}Page {{ pg_numb }} of {{ pg_all }}.{% endblocktrans %}
-                      </span>
-                      {% if page_obj.has_next %}
-                          <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
-                      {% endif %}
-                  </span>
-              </div>
-          {% endif %}
-          {% endblock %}
           </div>
         </div>
       </div>

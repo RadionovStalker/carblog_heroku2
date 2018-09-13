@@ -6,6 +6,7 @@ from .models import Article, Gallery
 from tinymce.widgets import TinyMCE
 from django.forms.models import inlineformset_factory
 from parler.forms import TranslatableModelForm, TranslatedField
+from django.utils.translation import gettext_lazy as _
 
 
 class TinyMCEWidget(TinyMCE):
@@ -48,7 +49,8 @@ class AddNewArticle(TranslatableModelForm):
     #         attrs={'required': False, 'cols': 30, 'rows': 10}
     #     )
     # )
-    image = forms.ImageField(required=False)
+    image = TranslatedField(form_class=forms.ImageField(required=False))
+    tree_category = TranslatedField()
 
 
 class UpdateProfileFormView(forms.ModelForm):
@@ -64,10 +66,10 @@ class UpdateProfileFormView(forms.ModelForm):
 
 
 CHOICE_LIST = (
-    ('-like', 'Популярные'),
-    ('like', 'Непопулярные'),
-    ('-id', 'Новые'),
-    ('id', 'Старые')
+    ('-like', _('Popular')),
+    ('like', _('Unpopular')),
+    ('-id', _('New')),
+    ('id', _('Old'))
 )
 
 

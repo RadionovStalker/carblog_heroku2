@@ -12,14 +12,15 @@ from django.dispatch import receiver
 
 
 class TreeCategory(MP_Node):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30, verbose_name=_("Name of category"))
     node_order_by = ['name']
-
-    def __unicode__(self):
-        return self.name
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = _("Category")
+        verbose_name_plural = _("Categories")
 
 
 def unique_name_and_path(instance, filename):
@@ -37,42 +38,39 @@ def unique_name_and_path(instance, filename):
 
 class Article(TranslatableModel):
 
-    author = models.ForeignKey(User, related_name="article_author", on_delete=models.CASCADE, help_text="Enter the author of article", default=1)
-    date_creation = models.DateTimeField(_('Date of creation'), auto_now_add=True, help_text="Date of creation")
-    date_updating = models.DateTimeField(_('Date of updating'), auto_now=True, help_text="Date of update")
+    author = models.ForeignKey(User, related_name="article_author", on_delete=models.CASCADE, help_text=_("Enter the author of article"), default=1)
+    date_creation = models.DateTimeField(_('Date of creation'), auto_now_add=True, help_text=_("Date of creation"))
+    date_updating = models.DateTimeField(_('Date of updating'), auto_now=True, help_text=_("Date of update"))
     like = models.ManyToManyField(User, _('Like'), blank=True)
-    # category = models.ManyToManyField(Category, _('Category'), related_name='article_category')  # убрать и заменить на tree_category или свою структуру
     # image = models.ImageField(_('Image'), upload_to="images/articles", blank=True)
-    image = models.ImageField(_('Image'), upload_to=unique_name_and_path, blank=True)
+    image = models.ImageField(_('Image'), upload_to=unique_name_and_path, blank=True, help_text=_("Main image of your article"))
 
-    tree_category = models.ManyToManyField(TreeCategory, _('Category'))
+    tree_category = models.ManyToManyField(TreeCategory, _('Category'), help_text=_("Select categories"))
 
     translations = TranslatedFields(
-        title=models.CharField(_('Title'), max_length=250, help_text="Write your name of article"),
+        title=models.CharField(_('Title'), max_length=250, help_text=_("Write your name of article")),
         description=models.CharField(_('Description'), max_length=1000,
-                                   help_text="Enter a little description of your article"),
-        body=HTMLField(),
+                                   help_text=_("Enter a little description of your article")),
+        body=HTMLField(_('Body'), help_text=_("Write text of article here")),
     )
 
     def __str__(self):
         return ' '.join([self.title, self.author.username, str(self.date_creation)])
 
-    def __unicode__(self):
-        return ' '.join([self.title, self.author.username])
-
     def get_absolute_url(self):
         return reverse('article-detail', args=[str(self.id)])
 
-    # class Meta:
-    #     ordering = ['-date_creation']
+    class Meta:
+        verbose_name = _("Article")
+        verbose_name_plural = _("Articles")
 
 
 class Comment(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comment')
-    text = models.CharField(max_length=1024, help_text="Write your commentary here")
-    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    date_creation = models.DateTimeField(auto_now_add=True)
-    date_updating = models.DateTimeField(auto_now=True)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comment', verbose_name=_("Article"))
+    text = models.CharField(max_length=1024, help_text=_("Write your commentary here"), verbose_name=_("Text of comment"))
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("Author"))
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name=_("Date of creation"), help_text=_("Date of creation"))
+    date_updating = models.DateTimeField(auto_now=True, verbose_name=_("Date of update"), help_text=_("Date of update"))
     parent_comment = models.ForeignKey('Comment', related_name='com_parent', blank=True, null=True, on_delete=models.CASCADE)
     child_comments = models.ForeignKey('Comment', related_name='com_children', blank=True, null=True, on_delete=models.SET_NULL)
 
@@ -84,36 +82,45 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ['-date_creation', 'author', 'article']
+        verbose_name = _("Comment")
+        verbose_name_plural = _("Comments")
 
 
 class Gallery(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, default=0, related_name="gallery")
-    image = models.ImageField(upload_to="images/gallery", blank=True, null=True)
+    image = models.ImageField(upload_to="images/gallery", blank=True, null=True, verbose_name=_('image'))
 
     class Meta:
         ordering = ['id']
+        verbose_name = _("Gallery")
 
     def __str__(self):
         return self.article.title
 
 
 class Subscribers(models.Model):
-    blogger = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subscribers")
-    subscriber = models.EmailField()
+    blogger = models.ForeignKey(User, on_delete=models.CASCADE, related_name="subscribers", verbose_name=_('author'))
+    subscriber = models.EmailField(verbose_name=_("Email of subscriber"))
 
     class Meta:
         ordering = ['blogger', 'subscriber']
+        verbose_name = _("Subscriber")
+        verbose_name_plural = _("Subscribers")
 
     def __str__(self):
         return ' '.join([self.subscriber, self.blogger.username])
 
 
 class UserProfile(models.Model):
-    image = models.ImageField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True, verbose_name=_('Avatar'))
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
+
+    class Meta:
+        verbose_name = _("UserProfile")
+        verbose_name_plural = _("UserProfiles")
 
 
 @receiver(models.signals.post_delete, sender=Article)

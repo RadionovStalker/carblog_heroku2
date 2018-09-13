@@ -45,7 +45,6 @@ class IndexView(generic.ListView):
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         # context['order_by'] = self.request.session.get('order_by', '-date_creation')
-        context['order_by'] = self.request.GET.get('order_by', '-date_creation')
         context['order_choice'] = CHOICE_LIST
         print("context")
         cat_names = list()
@@ -53,10 +52,15 @@ class IndexView(generic.ListView):
             cat_names.append(cat.name)
         context['group_choice'] = TreeCategory.objects.all()
         # print(context['group_choice'])
-        if 'group_by' in self.request.GET:
-            context['group_by'] = self.request.GET.getlist('group_by')
-        else:
+        if 'unfilter_btn' in self.request.GET:
             context['group_by'] = 'no'
+            context['order_by'] = '-date_creation'
+        else:
+            if 'group_by' in self.request.GET:
+                context['group_by'] = self.request.GET.getlist('group_by')
+            else:
+                context['group_by'] = 'no'
+            context['order_by'] = self.request.GET.get('order_by', '-date_creation')
         print(context['group_by'])
         # print('context')
         # print(context)
@@ -67,6 +71,9 @@ class IndexView(generic.ListView):
         # print(self.request.session)
         print("get queryset")
         print(self.request.GET)
+        if 'unfilter_btn' in self.request.GET:
+            objects = Article.objects.filter(translations__language_code=get_language())
+            return objects.order_by('-date_creation')
         if 'group_by' in self.request.GET:
             grouping = self.request.GET.getlist('group_by')
         else:
@@ -75,7 +82,8 @@ class IndexView(generic.ListView):
         print("it is grouping:")
         print(grouping)
         if grouping != 'no':
-            categories = TreeCategory.objects.filter(name__in=grouping)
+            categories = TreeCategory.objects.filter(id__in=grouping)
+            # categories = TreeCategory.objects.filter(name__in=grouping)
             names_cat = list()
             for cat in categories:
                 sub_categories = TreeCategory.get_tree(cat)
@@ -136,7 +144,9 @@ class ArticleHandleLikesView(generic.View):
         if 'type' in request.GET:
             if request.GET['type'] == 'like':
                 article = get_object_or_404(Article, pk=request.GET['art_id'])
-                if self.request.user in article.like.all():
+                # if self.request.user in article.like.all():
+                liked = Article.objects.filter(like=self.request.user.id)
+                if article in liked:
                     article.like.remove(self.request.user)
                     data['liked'] = 1
                 else:
@@ -144,7 +154,18 @@ class ArticleHandleLikesView(generic.View):
                     article.like.add(self.request.user)
                 data['count_like'] = article.like.count()
                 return JsonResponse(data)
-                # return super(ArticleDetailView, self).get(request, *args, **kwargs)
+                # if request.GET['type'] == 'like':
+                #     article = get_object_or_404(Article, pk=request.GET['art_id'])
+                #     # if self.request.user in article.like.all():
+                #     try:
+                #         Article.objects.get(like=self.request.user.id, id=article.id)
+                #         article.like.remove(self.request.user)
+                #         data['liked'] = 1
+                #     except ObjectDoesNotExist:
+                #         data['liked'] = 2
+                #         article.like.add(self.request.user)
+                #     data['count_like'] = article.like.count()
+                #     return JsonResponse(data)
         return super(ArticleHandleLikesView, self).get(request, *args, **kwargs)
 
 

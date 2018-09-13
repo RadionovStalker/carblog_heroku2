@@ -24,9 +24,9 @@
                     {% if group_choice %}
                     {% for cat in group_choice %}
                         {% if cat in group_by %}
-                        <option selected="selected" value={{cat.name}}>6</option>
+                        <option selected="selected" value={{cat.id}}>{{cat.name}}</option>
                         {% else %}
-                        <option value={{cat.name}}>{{cat.name}}</option>
+                        <option value={{cat.id}}>{{cat.name}}</option>
                         {% endif %}
                     {% endfor %}
                     {% endif %}
@@ -70,6 +70,23 @@
       </div>
   </div>
 {% endfor %}
+ {% if is_paginated %}
+              <div class="pagination">
+                  <span class="step-links">
+                      {% if page_obj.has_previous %}
+                        <a href="?page=1{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">&laquo; {% trans 'first'%}</a>
+                        <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">{% trans "previous" %}</a>
+                      {% endif %}
+                      <span class="page-current">
+                          {% blocktrans with pg_numb=page_obj.number pg_all=page_obj.paginator.num_pages %}Page {{ pg_numb }} of {{ pg_all }}.{% endblocktrans %}
+                      </span>
+                      {% if page_obj.has_next %}
+                        <a href="{{ request.path }}?page={{ page_obj.next_page_number }}{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">{% trans "next" %}</a>
+                        <a href="?page={{ articles.paginator.num_pages }}{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">{% trans 'last'%} &raquo;</a>
+                      {% endif %}
+                  </span>
+              </div>
+          {% endif %}
 {% else %}
 <p>{% trans "There no articles" %}</p>
 {% endif %}
