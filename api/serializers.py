@@ -120,18 +120,28 @@ class ArticlePutSerializer(serializers.Serializer):
         art_for_upd = Article.objects.get(id=self.validated_data['id'])
         if art_for_upd.author != request.user:
                     raise PermissionDenied("Forbidden, only author of the article can update it")
+        try:
+            art_for_upd.translations.get(language_code=self.validated_data['language'])
+            new_translation = False
+            print("is translation")
+        except ObjectDoesNotExist:
+            print("no translation")
+            # если перевода на указ. язык еще нет, должны быть переданы все поля модели
+            new_translation = True
         art_for_upd.set_current_language(self.validated_data['language'])
         if 'title' in self.validated_data.keys():
             art_for_upd.title = self.validated_data['title']
-        elif not art_for_upd.title:
+            print("no raise except")
+        elif new_translation:
+            print("raise except")
             raise ValueError("Field 'title' is null, you must put parameter 'title'")
         if 'description' in self.validated_data.keys():
             art_for_upd.description = self.validated_data['description']
-        elif not art_for_upd.description:
+        elif new_translation:
             raise ValueError("Field 'description' is null, you must put parameter 'description'")
         if 'body' in self.validated_data.keys():
             art_for_upd.body = self.validated_data['body']
-        elif not art_for_upd.body:
+        elif new_translation:
             raise ValueError("Field 'body' is null, you must put parameter 'body'")
         art_for_upd.save()
 
