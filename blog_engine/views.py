@@ -18,12 +18,13 @@ from django.utils.translation import get_language
 from django.utils.http import is_safe_url, urlunquote
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .tasks import send_mail_with_celery
+from .filters import ArticleFilter
 
 
 class IndexView(generic.ListView):
     model = Article
     template_name = 'index.html'
-    paginate_by = 5
+    # paginate_by = 5
 
     # def post(self, request, *args, **kwargs):
     #     print('post before')
@@ -45,26 +46,42 @@ class IndexView(generic.ListView):
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         # context['order_by'] = self.request.session.get('order_by', '-date_creation')
-        context['order_choice'] = CHOICE_LIST
-        print("context")
-        cat_names = list()
-        for cat in TreeCategory.objects.all():
-            cat_names.append(cat.name)
-        context['group_choice'] = TreeCategory.objects.all()
-        # print(context['group_choice'])
-        if 'unfilter_btn' in self.request.GET:
-            context['group_by'] = 'no'
-            context['order_by'] = '-date_creation'
-        else:
-            if 'group_by' in self.request.GET:
-                context['group_by'] = self.request.GET.getlist('group_by')
-            else:
-                context['group_by'] = 'no'
-            context['order_by'] = self.request.GET.get('order_by', '-date_creation')
-        print(context['group_by'])
-        # print('context')
-        # print(context)
+        print(self.request.GET)
+        context['articles_f'] = ArticleFilter(self.request.GET,
+                                              queryset=Article.objects.filter(translations__language_code=get_language()))
+        articles = context['articles_f'].qs
+        paginator = Paginator(articles, 5)  # Show 5 items per page
+        page = self.request.GET.get('page')
+        context['articles'] = paginator.get_page(page)
         return context
+
+    # def get_queryset(self):
+    #     objects = ArticleFilter(self.request.GET,
+    #                                           queryset=Article.objects.filter(translations__language_code=get_language())).queryset
+    #     return objects
+    # def get_context_data(self, *, object_list=None, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     # context['order_by'] = self.request.session.get('order_by', '-date_creation')
+    #     context['order_choice'] = CHOICE_LIST
+    #     print("context")
+    #     cat_names = list()
+    #     for cat in TreeCategory.objects.all():
+    #         cat_names.append(cat.name)
+    #     context['group_choice'] = TreeCategory.objects.all()
+    #     # print(context['group_choice'])
+    #     if 'unfilter_btn' in self.request.GET:
+    #         context['group_by'] = 'no'
+    #         context['order_by'] = '-date_creation'
+    #     else:
+    #         if 'group_by' in self.request.GET:
+    #             context['group_by'] = self.request.GET.getlist('group_by')
+    #         else:
+    #             context['group_by'] = 'no'
+    #         context['order_by'] = self.request.GET.get('order_by', '-date_creation')
+    #     print(context['group_by'])
+    #     # print('context')
+    #     # print(context)
+    #     return context
 
     def get_queryset(self):
         print("queryset")
@@ -83,15 +100,14 @@ class IndexView(generic.ListView):
         print(grouping)
         if grouping != 'no':
             categories = TreeCategory.objects.filter(id__in=grouping)
-            # categories = TreeCategory.objects.filter(name__in=grouping)
-            names_cat = list()
+            ids_cat = list()
             for cat in categories:
                 sub_categories = TreeCategory.get_tree(cat)
                 for sub_cat in sub_categories:
-                    if sub_cat.name not in names_cat:
-                        names_cat.append(sub_cat.name)
-            print(names_cat)
-            objects = Article.objects.filter(tree_category__name__in=names_cat,  translations__language_code=get_language())
+                    if sub_cat.id not in ids_cat:
+                        ids_cat.append(sub_cat.id)
+            print(ids_cat)
+            objects = Article.objects.filter(tree_category__id__in=ids_cat,  translations__language_code=get_language())
         else:
             objects = Article.objects.filter(translations__language_code=get_language())
 
@@ -331,21 +347,7 @@ class UserProfileUpdateView(FormView):
                 'image': user_image.image}
 
     def form_valid(self, form):
-        lastname = form.cleaned_data['last_name']
-        firstname = form.cleaned_data['first_name']
-        email = form.cleaned_data['email']
-        password = form.cleaned_data['password']
-        image = form.cleaned_data['image']
-        user = User.objects.get(pk=self.kwargs['pk'])
-        user.last_name = lastname
-        user.first_name = firstname
-        user.email = email
-        user.password = password
-        user.save()
-        user_image = UserProfile.objects.get(pk=user.pk)
-        user_image.image = image
-        user_image.save()
-
+        form.save()
         return super(UserProfileUpdateView, self).form_valid(form)
 
     def get_context_data(self, *, object_list=None, **kwargs):

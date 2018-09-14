@@ -64,6 +64,17 @@ class UpdateProfileFormView(forms.ModelForm):
         }
     image = forms.ImageField()
 
+    def save(self, commit=True):
+        user = User.objects.get(pk=self.kwargs['pk'])
+        user.last_name = self.cleaned_data['last_name']
+        user.first_name = self.cleaned_data['first_name']
+        user.email = self.cleaned_data['email']
+        user.password = self.cleaned_data['password']
+        user.save()
+        user_image = UserProfile.objects.get(pk=user.pk)
+        user_image.image = self.cleaned_data['image']
+        return user_image.save()
+
 
 CHOICE_LIST = (
     ('-like', _('Popular')),

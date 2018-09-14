@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     'sorl.thumbnail',
     'rosetta',
     'rest_framework',
-    'api'
+    'api',
+    'django_filters',
+    # 'pagination',
 ]
 
 MIDDLEWARE = [
@@ -63,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'pagination.middleware.PaginationMiddleware',
 ]
 
 ROOT_URLCONF = 'carblog.urls'
@@ -95,7 +98,13 @@ TEMPLATES = [
     },
 ]
 
-TEMPLATE_CONTEXT_PROCESSORS = 'django.core.context_processors.request'
+TEMPLATE_CONTEXT_PROCESSORS = [
+    # "django.core.context_processors.auth",
+    # "django.core.context_processors.debug",
+    # "django.core.context_processors.i18n",
+    # "django.core.context_processors.media",
+    "django.core.context_processors.request"
+]
 
 WSGI_APPLICATION = 'carblog.wsgi.application'
 
@@ -213,65 +222,12 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # конец настроек для отправки почты
 
-# настройки celery + redis
-# Celery application definition
-# BROKER_URL = 'redis://localhost:6379'
-# CELERY_BROKER_URL = 'redis://localhost:6379'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# # CELERY_RESULT_SERIALIZER = 'json'
-# # CELERY_TASK_SERIALIZER = 'json'
-# BROKER_BACKEND="redis"
-# end настройки celery + redis
-
-
-
-# djcelery.setup_loader()
-
-# BROKER_HOST = "localhost"
-# BROKER_BACKEND="redis"
-# REDIS_PORT=6379
-# REDIS_HOST = "localhost"
-# BROKER_USER = ""
-# BROKER_PASSWORD =""
-# BROKER_VHOST = "0"
-# REDIS_DB = 0
-# REDIS_CONNECT_RETRY = True
-# CELERY_SEND_EVENTS=True
-# CELERY_RESULT_BACKEND='redis'
-# CELERY_TASK_RESULT_EXPIRES =  10
-# CELERYBEAT_SCHEDULER="djcelery.schedulers.DatabaseScheduler"
-# CELERY_ALWAYS_EAGER=False
-
-# Celery settings
-# # Время, через которое хранимый в результат будет удалён: 5 часов
-# CELERY_TASK_RESULT_EXPIRES = 18000
-# # Отправлять оповещение о проблемах выполнения тасков на E-mail (берутся адреса из settings.ADMINS)
-# CELERND_TASK_ERROR_EMAILS = True
-# # Тип бекенда Celery для хранения результатов выполнения заданий
-# CELERY_RESULT_BACKEND = "redis"
-# # Адрес Redis-сервера
-# CELERY_REDIS_HOST = "localhost"
-# # Порт Redis-сервера
-# CELERY_REDIS_PORT = 6379
-# # Нормер Redis Database
-# CELERY_REDIS_DB = 0
-
-# Broker settings
-# Адрес броекра. Мы указываем протокол (redis://), адрес сервера (localost), порт (6379) и номер БД (0)
-# BROKER_URL = "redis://localhost:6379/0"
-# CELERY_BROKER_URL = 'redis://localhost'
 
 # это была попытка использовать rabbitmq
 CELERY_BROKER_URL = 'amqp://localhost'
 
-# BROKER_HOST = "localhost"
-# BROKER_PORT = 5672
-# BROKER_USER = "paradox"
-# BROKER_PASSWORD = "paradox"
-# BROKER_VHOST = "paradox_host"
 BROKER_URL = 'amqp://paradox:paradox@localhost:5672/paradox_host'
-# SITE_ID = 1
+
 
 # Activate Django-Heroku.
 django_heroku.settings(locals())

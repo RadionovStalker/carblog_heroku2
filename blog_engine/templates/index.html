@@ -8,38 +8,17 @@
 <h1 class="main_title">Main Car Blog</h1>
 <div class="filters">
     <div class="row">
-        <form action="" method="get" enctype="multipart/form-data">
-            <div class="col-sm-6">
-                <label for="sel_ord">{%trans "Show at first" %}</label>
-                <select id="sel_ord" name="order_by">
-
-                {% for key, name in order_choice %}
-                    <option value="{{key}}">{{name}}</option>
-                {% endfor %}
-                </select>
-            </div>
-            <div class="col-sm-6">
-                <label for="sel_cat">{% trans "Categories" %}</label>
-                <select name="group_by" id="sel_cat" multiple>
-                    {% if group_choice %}
-                    {% for cat in group_choice %}
-                        {% if cat in group_by %}
-                        <option selected="selected" value={{cat.id}}>{{cat.name}}</option>
-                        {% else %}
-                        <option value={{cat.id}}>{{cat.name}}</option>
-                        {% endif %}
-                    {% endfor %}
-                    {% endif %}
-                </select>
-            </div>
+        <form action="" method="GET" enctype="multipart/form-data">
+            {{articles_f.form}}
             <input type="submit" name="filter_btn" value="{% trans 'Filter' %}" />
-            <input type="submit" name="unfilter_btn" value="{% trans 'Delete filters' %}"/>
+            <a href="{{request.path}}"><button>{% trans 'Delete filters'%}</button></a>
+            <!--<input type="submit" name="unfilter_btn" value="{% trans 'Delete filters' %}"/>-->
         </form>
     </div>
 </div>
 <h2 class="txt-center">{% trans "Articles" %}:</h2>
-{% if article_list %}
-{% for article in article_list %}
+{% if articles %}
+{% for article in articles %}
   <div class="article">
         <h3><a href="{{ article.get_absolute_url }}">{{article.title}}</a></h3>
       <div class="row">
@@ -70,23 +49,31 @@
       </div>
   </div>
 {% endfor %}
- {% if is_paginated %}
-              <div class="pagination">
-                  <span class="step-links">
-                      {% if page_obj.has_previous %}
-                        <a href="?page=1{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">&laquo; {% trans 'first'%}</a>
-                        <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">{% trans "previous" %}</a>
-                      {% endif %}
-                      <span class="page-current">
-                          {% blocktrans with pg_numb=page_obj.number pg_all=page_obj.paginator.num_pages %}Page {{ pg_numb }} of {{ pg_all }}.{% endblocktrans %}
-                      </span>
-                      {% if page_obj.has_next %}
-                        <a href="{{ request.path }}?page={{ page_obj.next_page_number }}{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">{% trans "next" %}</a>
-                        <a href="?page={{ articles.paginator.num_pages }}{% if order_by != '-date_creation'%}&order_by={{order_by}}{% endif %}{% if group_by != 'no' %}{% for gr in group_by %}&group_by={{gr}}{%endfor%}{%endif%}">{% trans 'last'%} &raquo;</a>
-                      {% endif %}
-                  </span>
-              </div>
+  <div class="pagination">
+      <span class="step-links">
+          {% if articles.has_previous %}
+            {% if '?' in  request.get_full_path %}
+                <a href="{{ request.get_full_path }}&page=1">&laquo; {% trans 'first'%}</a>
+                <a href="{{ request.get_full_path }}&page={{ articles.previous_page_number }}">{% trans "previous" %}</a>
+            {% else %}
+                <a href="{{ request.get_full_path }}?page=1">&laquo; {% trans 'first'%}</a>
+                <a href="{{ request.get_full_path }}?page={{ articles.previous_page_number }}">{% trans "previous" %}</a>
+            {% endif %}
           {% endif %}
+          <span class="page-current">
+              {% blocktrans with pg_numb=articles.number pg_all=articles.paginator.num_pages %}Page {{ pg_numb }} of {{ pg_all }}.{% endblocktrans %}
+          </span>
+          {% if articles.has_next %}
+            {% if '?' in  request.get_full_path %}
+                <a href="{{ request.get_full_path }}&page={{ articles.next_page_number }}">{% trans "next" %}</a>
+                <a href="{{ request.get_full_path }}&page={{ articles.paginator.num_pages }}">{% trans 'last'%} &raquo;</a>
+            {% else %}
+                <a href="{{ request.get_full_path }}?page={{ articles.next_page_number }}">{% trans "next" %}</a>
+                <a href="{{ request.get_full_path }}?page={{ articles.paginator.num_pages }}">{% trans 'last'%} &raquo;</a>
+            {% endif %}
+          {% endif %}
+      </span>
+  </div>
 {% else %}
 <p>{% trans "There no articles" %}</p>
 {% endif %}
