@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 {% load static %}
 {% load i18n %}
+{% load carblog_extras %}
 {% block title %}
 <title>Car Blog!</title>
 {% endblock %}
@@ -52,29 +53,18 @@
   <div class="pagination">
       <span class="step-links">
           {% if articles.has_previous %}
-            {% if '?' in  request.get_full_path %}
-                <a href="{{ request.get_full_path }}&page=1">&laquo; {% trans 'first'%}</a>
-                <a href="{{ request.get_full_path }}&page={{ articles.previous_page_number }}">{% trans "previous" %}</a>
-            {% else %}
-                <a href="{{ request.get_full_path }}?page=1">&laquo; {% trans 'first'%}</a>
-                <a href="{{ request.get_full_path }}?page={{ articles.previous_page_number }}">{% trans "previous" %}</a>
-            {% endif %}
+            <a href="{{ request.get_full_path|refresh_url_pag:1 }}">&laquo; {% trans 'first'%}</a>
+            <a href="{{ request.get_full_path|refresh_url_pag:articles.previous_page_number }}">{% trans "previous" %}</a>
           {% endif %}
           <span class="page-current">
               {% blocktrans with pg_numb=articles.number pg_all=articles.paginator.num_pages %}Page {{ pg_numb }} of {{ pg_all }}.{% endblocktrans %}
           </span>
           {% if articles.has_next %}
-            {% if '?' in  request.get_full_path %}
-                <a href="{{ request.get_full_path }}&page={{ articles.next_page_number }}">{% trans "next" %}</a>
-                <a href="{{ request.get_full_path }}&page={{ articles.paginator.num_pages }}">{% trans 'last'%} &raquo;</a>
-            {% else %}
-                <a href="{{ request.get_full_path }}?page={{ articles.next_page_number }}">{% trans "next" %}</a>
-                <a href="{{ request.get_full_path }}?page={{ articles.paginator.num_pages }}">{% trans 'last'%} &raquo;</a>
-            {% endif %}
+            <a href="{{ request.get_full_path|refresh_url_pag:articles.next_page_number }}">{% trans "next" %}</a>
+            <a href="{{ request.get_full_path|refresh_url_pag:articles.paginator.num_pages }}">{% trans 'last'%} &raquo;</a>
           {% endif %}
       </span>
   </div>
-{% else %}
 <p>{% trans "There no articles" %}</p>
 {% endif %}
 

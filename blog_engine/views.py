@@ -26,23 +26,6 @@ class IndexView(generic.ListView):
     template_name = 'index.html'
     # paginate_by = 5
 
-    # def post(self, request, *args, **kwargs):
-    #     print('post before')
-    #     print(self.request.POST)
-    #     print('get')
-    #     print(self.request.GET)
-    #     if 'unfilter_btn' in self.request.POST:
-    #         print("delete filters")
-    #         self.request.session['order_by'] = '-date_creation'
-    #         self.request.session['group_by'] = 'no'
-    #     else:
-    #         self.request.session['order_by'] = self.request.POST.get('order_by', '-date_creation')
-    #         self.request.session['group_by'] = self.request.POST.getlist('group_by', 'no')
-    #     print('post after')
-    #     print(self.request.POST)
-    #     # print(self.request.session['group_by'])
-    #     return super().get(request, *args, **kwargs)
-
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         # context['order_by'] = self.request.session.get('order_by', '-date_creation')
