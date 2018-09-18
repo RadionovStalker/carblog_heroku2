@@ -6,22 +6,38 @@
 {% block content %}
     <h1>{% trans "Title"%}: {{ article.title }}</h1>
 {% if article.image %}
-    <p>{% trans "Main image" %}: </p>
-    {% thumbnail article.image "x500" crop="center" as im %}
-    <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="image"/>
-    {% empty %}
-    <p>{{ article.image.url }}</p>
-    {% endthumbnail %}
+<p>{% trans "Main image" %}: </p>
+    {% if "http" in article.image.name %}
+        {% thumbnail article.image.name "x500" crop="center" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="image"/>
+        {% empty %}
+        <p>{{ article.image.name }}</p>
+        {% endthumbnail %}
+    {%else%}
+        {% thumbnail article.image "x500" crop="center" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="image"/>
+        {% empty %}
+        <p>{{ article.image.url }}</p>
+        {% endthumbnail %}
+    {%endif%}
 {% endif %}
 {% if gallery %}
 <p>{% trans "Gallery" %}: </p>
 {% endif %}
 {% for image_obj in gallery %}
-      {% thumbnail image_obj.image "x400" crop="right" as im %}
-    <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="image"/>
-    {% empty %}
-    <p>{{ article.image.url }}</p>
-    {% endthumbnail %}
+    {% if "http" in image_obj.image.name %}
+          {% thumbnail image_obj.image.name "x400" crop="right" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="image"/>
+        {% empty %}
+        <p>{{ article.image.name }}</p>
+        {% endthumbnail %}
+    {%else%}
+         {% thumbnail image_obj.image "x400" crop="right" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="image"/>
+        {% empty %}
+        <p>{{ article.image.url}}</p>
+        {% endthumbnail %}
+    {% endif %}
 {% endfor %}
     <p><strong>{% trans "Author"%} :</strong> <a href="{% url 'author-detail' article.author.pk %}">{{ article.author.username }}</a></p>
     {% if article.date_creation != article.date_updating %}

@@ -38,34 +38,6 @@ class IndexView(generic.ListView):
         context['articles'] = paginator.get_page(page)
         return context
 
-    # def get_queryset(self):
-    #     objects = ArticleFilter(self.request.GET,
-    #                                           queryset=Article.objects.filter(translations__language_code=get_language())).queryset
-    #     return objects
-    # def get_context_data(self, *, object_list=None, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     # context['order_by'] = self.request.session.get('order_by', '-date_creation')
-    #     context['order_choice'] = CHOICE_LIST
-    #     print("context")
-    #     cat_names = list()
-    #     for cat in TreeCategory.objects.all():
-    #         cat_names.append(cat.name)
-    #     context['group_choice'] = TreeCategory.objects.all()
-    #     # print(context['group_choice'])
-    #     if 'unfilter_btn' in self.request.GET:
-    #         context['group_by'] = 'no'
-    #         context['order_by'] = '-date_creation'
-    #     else:
-    #         if 'group_by' in self.request.GET:
-    #             context['group_by'] = self.request.GET.getlist('group_by')
-    #         else:
-    #             context['group_by'] = 'no'
-    #         context['order_by'] = self.request.GET.get('order_by', '-date_creation')
-    #     print(context['group_by'])
-    #     # print('context')
-    #     # print(context)
-    #     return context
-
     def get_queryset(self):
         print("queryset")
         # print(self.request.session)
@@ -153,18 +125,6 @@ class ArticleHandleLikesView(generic.View):
                     article.like.add(self.request.user)
                 data['count_like'] = article.like.count()
                 return JsonResponse(data)
-                # if request.GET['type'] == 'like':
-                #     article = get_object_or_404(Article, pk=request.GET['art_id'])
-                #     # if self.request.user in article.like.all():
-                #     try:
-                #         Article.objects.get(like=self.request.user.id, id=article.id)
-                #         article.like.remove(self.request.user)
-                #         data['liked'] = 1
-                #     except ObjectDoesNotExist:
-                #         data['liked'] = 2
-                #         article.like.add(self.request.user)
-                #     data['count_like'] = article.like.count()
-                #     return JsonResponse(data)
         return super(ArticleHandleLikesView, self).get(request, *args, **kwargs)
 
 
@@ -326,8 +286,9 @@ class UserProfileUpdateView(FormView):
         return {'last_name': user.last_name,
                 'first_name': user.first_name,
                 'email': user.email,
-                'password': user.password,
-                'image': user_image.image}
+                'image': user_image.image,
+                'id': user.id,
+                }
 
     def form_valid(self, form):
         form.save()

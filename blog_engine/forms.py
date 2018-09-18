@@ -63,13 +63,14 @@ class UpdateProfileFormView(forms.ModelForm):
             'email',
         }
     image = forms.ImageField()
+    id = forms.IntegerField(widget=forms.HiddenInput())
 
     def save(self, commit=True):
-        user = User.objects.get(pk=self.kwargs['pk'])
+        user = User.objects.get(pk=self.cleaned_data['id'])
         user.last_name = self.cleaned_data['last_name']
         user.first_name = self.cleaned_data['first_name']
         user.email = self.cleaned_data['email']
-        user.password = self.cleaned_data['password']
+        # user.password = self.cleaned_data['password']
         user.save()
         user_image = UserProfile.objects.get(pk=user.pk)
         user_image.image = self.cleaned_data['image']

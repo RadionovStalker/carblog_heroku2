@@ -23,6 +23,16 @@ class TreeCategory(MP_Node):
         verbose_name_plural = _("Categories")
 
 
+def unique_gallery_name_path(instance, filename):
+
+    upload_to = 'images/gallery'
+    type_name = filename.split('.')[-1]
+    unique_time = str((datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds() * 1000)
+    uni_name = '_'.join([str(instance.id)+"_gal", unique_time])
+    filename = '{0}.{1}'.format(uni_name, type_name)
+    return os.path.join(upload_to, filename)
+
+
 def unique_name_and_path(instance, filename):
     """
     Именование загруженного изображения в вид:
@@ -32,6 +42,19 @@ def unique_name_and_path(instance, filename):
     type_name = filename.split('.')[-1]
     unique_time = str((datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds() * 1000)
     uni_name = '_'.join([str(instance.id), unique_time])
+    filename = '{0}.{1}'.format(uni_name, type_name)
+    return os.path.join(upload_to, filename)
+
+
+def avatar_name_and_path(instance, filename):
+    """
+    Генерация имени для аватаров пользователей в вид:
+    Ник пользователя+тек. дата в мил.сек.+формат
+    """
+    upload_to = "images/profiles"
+    type_name = filename.split('.')[-1]
+    unique_time = str((datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds() * 1000)
+    uni_name = '_'.join([str(instance.user.username), unique_time])
     filename = '{0}.{1}'.format(uni_name, type_name)
     return os.path.join(upload_to, filename)
 
@@ -63,6 +86,7 @@ class Article(TranslatableModel):
     class Meta:
         verbose_name = _("Article")
         verbose_name_plural = _("Articles")
+        ordering = ['-id']
 
 
 class Comment(models.Model):
@@ -88,7 +112,7 @@ class Comment(models.Model):
 
 class Gallery(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, default=0, related_name="gallery")
-    image = models.ImageField(upload_to="images/gallery", blank=True, null=True, verbose_name=_('image'))
+    image = models.ImageField(upload_to=unique_gallery_name_path, blank=True, null=True, verbose_name=_('image'))
 
     class Meta:
         ordering = ['id']
@@ -112,7 +136,7 @@ class Subscribers(models.Model):
 
 
 class UserProfile(models.Model):
-    image = models.ImageField(blank=True, null=True, verbose_name=_('Avatar'))
+    image = models.ImageField(upload_to=avatar_name_and_path, blank=True, null=True, verbose_name=_('Avatar'))
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
@@ -123,11 +147,32 @@ class UserProfile(models.Model):
         verbose_name_plural = _("UserProfiles")
 
 
+@receiver(models.signals.pre_save, sender=UserProfile)
+def avatar_del_on_change(sender, instance, **kwargs):
+    """
+    Удаление аватара из папки /files/ при изменении профиля пользователя (если аватар также был изменен)
+    """
+    if not instance.pk:
+        return False
+    try:
+        old_file = UserProfile.objects.get(pk=instance.pk).image
+    except Exception:
+        return False
+    new_file = instance.image
+    if not old_file == new_file:
+        try:
+            if os.path.isfile(old_file.path):
+                os.remove(old_file.path)
+        except Exception:
+            print("аватара, связанного с пользователем не обнаружено")
+
+
+@receiver(models.signals.post_delete, sender=Gallery)
+@receiver(models.signals.post_delete, sender=UserProfile)
 @receiver(models.signals.post_delete, sender=Article)
 def del_on_del(sender, instance, **kwargs):
     """
-    Удаление изображения из папки /media/ при удалении
-    изображения в статье
+    Удаление изображения из папки /files/ при удалении статьи
     """
     if instance.image:
         if os.path.isfile(instance.image.path):

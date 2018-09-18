@@ -26,7 +26,11 @@
       <div class="row">
           <div class="col-sm-4">
                 {% if article.image %}
-                <img class="art_preview" src="{{article.image.url}}" alt="image"/>
+                    {% if "http" in article.image.name %}
+                        <img class="art_preview" src="{{article.image.name}}" alt="image"/>
+                    {% else %}
+                      <img class="art_preview" src="{{article.image.url}}" alt="image"/>
+                    {% endif %}
                 {% else %}
                 <img class="art_preview" src="{% static 'images/pages/def_article.jpg' %}" alt="image"/>
                 {% endif %}

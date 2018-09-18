@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'rosetta',
     'rest_framework',
     'api',
-    'django_filters'
+    'django_filters',
 ]
 
 MIDDLEWARE = [
