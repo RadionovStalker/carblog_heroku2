@@ -85,3 +85,22 @@ CHOICE_LIST = (
 )
 
 
+class ArticleGalleryForm(forms.ModelForm):
+    class Meta:
+        model = Gallery
+        fields = {
+            'article',
+            'image'
+        }
+    # image = forms.ImageField()
+
+
+ArticleGalleryFormSet = inlineformset_factory(Article, Gallery, form=ArticleGalleryForm, extra=1)
+
+# class FamilyMemberForm(ModelForm):
+#     class Meta:
+#         model = FamilyMember
+#         exclude = ()
+#
+# FamilyMemberFormSet = inlineformset_factory(Profile, FamilyMember,
+#                                             form=FamilyMemberForm, extra=1)

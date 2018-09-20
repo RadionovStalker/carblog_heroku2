@@ -108,3 +108,5 @@ venv.bak/
 locale/
 
 files/
+
+parse_articles.json

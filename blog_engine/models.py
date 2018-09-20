@@ -119,7 +119,7 @@ class Gallery(models.Model):
         verbose_name = _("Gallery")
 
     def __str__(self):
-        return self.article.title
+        return ' '.join([str(self.article.id), self.article.title])
 
 
 class Subscribers(models.Model):

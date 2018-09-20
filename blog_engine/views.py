@@ -9,7 +9,7 @@ from django.views.generic.edit import FormView, UpdateView, DeleteView
 from django.contrib.auth.forms import UserCreationForm
 from .models import UserProfile
 from .forms import UpdateProfileFormView
-from .forms import AddNewArticle, CHOICE_LIST, UpdateArticleForm
+from .forms import AddNewArticle, CHOICE_LIST, UpdateArticleForm, ArticleGalleryForm, ArticleGalleryFormSet
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from parler.views import TranslatableSlugMixin
 from django.http import JsonResponse
@@ -19,6 +19,8 @@ from django.utils.http import is_safe_url, urlunquote
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .tasks import send_mail_with_celery
 from .filters import ArticleFilter
+from django.db import transaction
+from parler.views import TranslatableCreateView, TranslatableUpdateView
 
 
 class IndexView(generic.ListView):
@@ -338,6 +340,111 @@ class RegisterFormView(FormView):
 
         # Вызываем метод базового класса
         return super(RegisterFormView, self).form_valid(form)
+
+
+# class ProfileFamilyMemberCreate(generic.CreateView):
+#     model = Profile
+#     fields = ['first_name', 'last_name']
+#     success_url = reverse_lazy('profile-list')
+#
+#     def get_context_data(self, **kwargs):
+#         data = super(ProfileFamilyMemberCreate, self).get_context_data(**kwargs)
+#         if self.request.POST:
+#             data['familymembers'] = FamilyMemberFormSet(self.request.POST)
+#         else:
+#             data['familymembers'] = FamilyMemberFormSet()
+#         return data
+#
+#     def form_valid(self, form):
+#         context = self.get_context_data()
+#         familymembers = context['familymembers']
+#         with transaction.atomic():
+#             self.object = form.save()
+#
+#             if familymembers.is_valid():
+#                 familymembers.instance = self.object
+#                 familymembers.save()
+#         return super(ProfileFamilyMemberCreate, self).form_valid(form)
+#
+#
+# class ProfileFamilyMemberUpdate(UpdateView):
+#     model = Profile
+#     fields = ['first_name', 'last_name']
+#     success_url = reverse_lazy('profile-list')
+#
+#     def get_context_data(self, **kwargs):
+#         data = super(ProfileFamilyMemberUpdate, self).get_context_data(**kwargs)
+#         if self.request.POST:
+#             data['familymembers'] = FamilyMemberFormSet(self.request.POST, instance=self.object)
+#         else:
+#             data['familymembers'] = FamilyMemberFormSet(instance=self.object)
+#         return data
+#
+#     def form_valid(self, form):
+#         context = self.get_context_data()
+#         familymembers = context['familymembers']
+#         with transaction.atomic():
+#             self.object = form.save()
+#
+#             if familymembers.is_valid():
+#                 familymembers.instance = self.object
+#                 familymembers.save()
+#         return super(ProfileFamilyMemberUpdate, self).form_valid(form)
+
+
+class ArticleGalleryCreateView(TranslatableCreateView):
+    model = Article
+    template_name = "blog_engine/article_gallery_form.html"
+    fields = ['title', 'description', 'body', 'image']
+
+    def get_context_data(self, **kwargs):
+        data = super(ArticleGalleryCreateView, self).get_context_data(**kwargs)
+        if self.request.POST:
+            print("POST : ")
+            print(self.request.POST)
+            print("FILES : ")
+            print(self.request.FILES)
+            data['art_gal'] = ArticleGalleryFormSet(self.request.POST, self.request.FILES)
+        else:
+            data['art_gal'] = ArticleGalleryFormSet()
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        art_gal = context['art_gal']
+        with transaction.atomic():
+            self.object = form.save()
+
+            if art_gal.is_valid():
+                art_gal.instance = self.object
+                art_gal.save()
+        return super(ArticleGalleryCreateView, self).form_valid(form)
+
+
+class ArticleGalleryUpdateView(TranslatableUpdateView):
+    model = Article
+    template_name = "blog_engine/article_gallery_form.html"
+    fields = ['title', 'description', 'body', 'image']
+
+    def get_context_data(self, **kwargs):
+        data = super(ArticleGalleryUpdateView, self).get_context_data(**kwargs)
+        if self.request.POST:
+            data['art_gal'] = ArticleGalleryFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            data['art_gal'] = ArticleGalleryFormSet(instance=self.object)
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        art_gal = context['art_gal']
+        with transaction.atomic():
+            self.object = form.save()
+
+            if art_gal.is_valid():
+                art_gal.instance = self.object
+                art_gal.save()
+        return super(ArticleGalleryUpdateView, self).form_valid(form)
+
 
 
 
